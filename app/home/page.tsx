@@ -1,103 +1,78 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function HomePage() {
+export default function Home() {
   const router = useRouter();
   const [draftCount, setDraftCount] = useState<number | null>(null);
   const [finalCount, setFinalCount] = useState<number | null>(null);
-  const [creating, setCreating] = useState(false);
 
-  async function loadCounts() {
-    const d = await supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'draft');
-    const f = await supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'final');
-    setDraftCount(d.count ?? 0);
-    setFinalCount(f.count ?? 0);
-  }
-  useEffect(() => { loadCounts(); }, []);
-
-  async function createDraft() {
-    setCreating(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Please sign in.');
-
-      // IMPORTANT: no 'company' here — we use 'details'
-      const { data: inserted, error } = await supabase
+  useEffect(() => {
+    const loadCounts = async () => {
+      const { count: dCount } = await supabase
         .from('reports')
-        .insert({
-          status: 'draft',
-          created_by: user.id,
-          report_id: null,
-          title: null,
-          inspector_name: null,
-          inspection_date: new Date().toISOString().slice(0, 10),
-          details: null,
-        })
-        .select('id')
-        .single();
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'draft');
+      setDraftCount(dCount ?? 0);
 
-      if (error) throw error;
+      const { count: fCount } = await supabase
+        .from('reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'final');
+      setFinalCount(fCount ?? 0);
+    };
+    loadCounts();
+  }, []);
 
-      // create first blank item
-      await supabase.from('report_items').insert({
-        report_id: inserted.id,
-        idx: 1,
-        title: '',
-        result: 'na',
-        notes: '',
-      });
-
-      router.push(`/drafts/${inserted.id}`);
-    } catch (e: any) {
-      alert(e.message ?? 'Failed to create draft');
-    } finally {
-      setCreating(false);
-    }
-  }
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    router.replace('/'); // or '/login' if you have one
+  };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <h1 className="text-2xl font-semibold">Home</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Create New Draft (left) */}
-          <button
-            onClick={createDraft}
-            disabled={creating}
-            className="rounded-xl border bg-white p-6 text-left hover:shadow-md transition disabled:opacity-60"
-          >
-            <div className="text-lg font-semibold mb-1">Create New Draft</div>
-            <div className="text-sm text-gray-600">Start a new report</div>
-          </button>
-
-          {/* View Draft Reports (middle) */}
-          <Link
-            href="/drafts"
-            className="rounded-xl border bg-white p-6 hover:shadow-md transition"
-          >
-            <div className="text-lg font-semibold mb-1">
-              View {draftCount ?? '…'} Draft Reports
-            </div>
-            <div className="text-sm text-gray-600">Edit existing drafts</div>
-          </Link>
-
-          {/* View Final Reports (right) */}
-          <Link
-            href="/final"
-            className="rounded-xl border bg-white p-6 hover:shadow-md transition"
-          >
-            <div className="text-lg font-semibold mb-1">
-              View {finalCount ?? '…'} Final Reports
-            </div>
-            <div className="text-sm text-gray-600">Download / share / revert</div>
-          </Link>
-        </div>
+    <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mb-6 flex items-center">
+        <h1 className="text-3xl font-semibold text-slate-900">Home</h1>
+        <button
+          onClick={signOut}
+          className="ml-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Sign out
+        </button>
       </div>
-    </main>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <Link
+          href="/drafts/new"
+          className="block rounded-2xl border border-slate-200 p-6 hover:shadow-sm"
+        >
+          <h2 className="text-xl font-semibold text-slate-900">Create New Draft</h2>
+          <p className="mt-2 text-slate-600">Start a new report</p>
+        </Link>
+
+        <Link
+          href="/drafts"
+          className="block rounded-2xl border border-slate-200 p-6 hover:shadow-sm"
+        >
+          <h2 className="text-xl font-semibold text-slate-900">
+            View {draftCount ?? '…'} Draft Reports
+          </h2>
+          <p className="mt-2 text-slate-600">Edit existing drafts</p>
+        </Link>
+
+        <Link
+          href="/final"
+          className="block rounded-2xl border border-slate-200 p-6 hover:shadow-sm"
+        >
+          <h2 className="text-xl font-semibold text-slate-900">
+            View {finalCount ?? '…'} Final Reports
+          </h2>
+          <p className="mt-2 text-slate-600">Download / share</p>
+        </Link>
+      </div>
+    </div>
   );
 }
