@@ -48,14 +48,19 @@ export default function Page() {
     }
   }
 
-  async function signInWithGoogle() {
-    setErr(null); setMsg(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined }
-    });
-    if (error) setErr(error.message);
-  }
+async function signInWithGoogle() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      // EITHER absolute:
+      redirectTo: `${window.location.origin}/auth/callback`
+
+
+      // OR simply a relative path (also fine):
+      // redirectTo: '/auth/callback',
+    },
+  });
+}
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
