@@ -52,13 +52,13 @@ export default function PrintPage() {
   useEffect(() => {
     (async () => {
       // 1) fetch report + items
-      const { data: r } = await supabase.from('reports').select('*').eq('id', params.id).single();
+      const { data: r } = await supabase.from('reports').select('*').eq('id', id).single();
       setReport(r as Report);
 
       const { data: i } = await supabase
         .from('report_items')
         .select('*')
-        .eq('report_id', params.id)
+        .eq('report_id', id)
         .order('idx', { ascending: true });
 
       const itemsList = (i ?? []) as Item[];
