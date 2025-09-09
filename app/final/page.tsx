@@ -25,7 +25,7 @@ export default function FinalsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('reports')
-      .select('id, inspection_date, inspector_name, report_id, title, status')
+      .select('id, inspection_date, report_id, title, status')
       .eq('status', 'final')
       .order('inspection_date', { ascending: false });
 
@@ -44,18 +44,7 @@ export default function FinalsPage() {
     window.open(`/print/${id}`, '_blank');
   }
 
-  async function sharePdf(e: any, id: string) {
-    e.stopPropagation();
-    const url = `${window.location.origin}/print/${id}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'Inspection Report', url }); } catch {}
-    } else if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard.');
-    } else {
-      prompt('Copy this link:', url);
-    }
-  }
+  
 
   async function revertToDraft(e: any, reportId: string) {
     e.stopPropagation();
@@ -118,8 +107,7 @@ export default function FinalsPage() {
             <thead>
               <tr className="bg-gray-50 text-left">
                 <th className="p-3">Inspection Date</th>
-                <th className="p-3">Name</th>
-                <th className="p-3">Report ID</th>
+                                <th className="p-3">Report ID</th>
                 <th className="p-3">Report Title</th>
                 <th className="p-3 w-[380px]">Actions</th>
               </tr>
@@ -145,7 +133,7 @@ export default function FinalsPage() {
                       onKeyDown={onKey}
                     >
                       <td className="p-3">{r.inspection_date ?? ''}</td>
-                      <td className="p-3">{r.inspector_name ?? ''}</td>
+                      
                       <td className="p-3">
                         <Link
                           href={`/final/${r.id}`}
@@ -165,13 +153,7 @@ export default function FinalsPage() {
                           >
                             PDF
                           </button>
-                          <button
-                            className="rounded-md border px-2 py-1 hover:bg-gray-50"
-                            onClick={(e) => sharePdf(e, r.id)}
-                            title="Share PDF"
-                          >
-                            Share
-                          </button>
+                          
                           <button
                             className="rounded-md border px-2 py-1 hover:bg-gray-50"
                             onClick={(e) => revertToDraft(e, r.id)}

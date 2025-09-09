@@ -25,7 +25,7 @@ export default function DraftsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('reports')
-      .select('id, inspection_date, inspector_name, report_id, title, status')
+      .select('id, inspection_date, report_id, title, status')
       .eq('status', 'draft')
       .order('inspection_date', { ascending: false });
 
@@ -141,7 +141,7 @@ export default function DraftsPage() {
             <thead>
               <tr className="bg-gray-50 text-left">
                 <th className="p-3">Inspection Date</th>
-                <th className="p-3">Name</th>
+                
                 <th className="p-3">Report ID</th>
                 <th className="p-3">Report Title</th>
                 <th className="p-3 w-[180px]">Actions</th>
@@ -168,7 +168,7 @@ export default function DraftsPage() {
                       onKeyDown={onKey}
                     >
                       <td className="p-3">{r.inspection_date ?? ''}</td>
-                      <td className="p-3">{r.inspector_name ?? ''}</td>
+                      
                       <td className="p-3">
                         <Link
                           href={`/drafts/${r.id}`}
