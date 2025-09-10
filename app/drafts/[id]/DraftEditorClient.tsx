@@ -52,9 +52,8 @@ export default function DraftEditorClient({ id }: { id: string }) {
     // normalize blanks to NULL for string fields
     let v: any = value;
     if (typeof v === 'string') {
-      v = v.trim();
-      if (v === '') v = null;
-    }
+  if (v.trim() === '') v = null; // only convert all-whitespace to null
+}
     setReport(r => r ? ({ ...r, [field]: v } as Report) : r);
     const { error } = await supabase.from('reports').update({ [field]: v }).eq('id', report.id);
     if (error) alert(error.message);
