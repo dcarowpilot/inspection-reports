@@ -224,13 +224,10 @@ export default function ItemCard({ item, reportId, onMoveUp, onMoveDown, onDelet
 
             <button
               type="button" aria-label="Add photo" title="Add photo"
-              style={{ width: '36px', height: '32px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5"> <rect x="3" y="5" width="14" height="12" rx="2"/> <circle cx="9" cy="10" r="1.5"/> <path d="M4 15l4-4 3 3 2-2 4 4"/> <circle cx="19" cy="7" r="3" fill="currentColor"/> <path d="M19 5.75v2.5M17.75 7h2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/> </svg>" )', color: 'transparent' }}
+              style={{ width: '36px', height: '32px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'black\' stroke-width=\'1.5\'><rect x=\'4\' y=\'5\' width=\'14\' height=\'11\' rx=\'2\'/><rect x=\'4\' y=\'16\' width=\'14\' height=\'3\' rx=\'1\'/><path d=\'M5.5 14l3-3 2.5 2.5 2-2 3 3\'/><circle cx=\'11\' cy=\'9\' r=\'1.2\'/><circle cx=\'20\' cy=\'7\' r=\'3\' fill=\'black\'/><path d=\'M20 5.75v2.5M18.75 7h2.5\' stroke=\'white\' stroke-width=\'1.5\' stroke-linecap=\'round\'/></svg>" )', color: 'transparent' }}
               onClick={() => fileInputRef.current?.click()}
               disabled={busy || photos.length >= 4}
-              aria-label="Add photo"
-              title="Add photo"
               className="inline-flex items-center justify-center gap-1 rounded-md border px-2.5 py-1.5 hover:bg-gray-50 disabled:opacity-60 text-transparent"
-              style={{ width: '36px', height: '32px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'black\' stroke-width=\'1.5\'><rect x=\'4\' y=\'5\' width=\'14\' height=\'11\' rx=\'2\'/><rect x=\'4\' y=\'16\' width=\'14\' height=\'3\' rx=\'1\'/><path d=\'M5.5 14l3-3 2.5 2.5 2-2 3 3\'/><circle cx=\'11\' cy=\'9\' r=\'1.2\'/><circle cx=\'20\' cy=\'7\' r=\'3\' fill=\'black\'/><path d=\'M20 5.75v2.5M18.75 7h2.5\' stroke=\'white\' stroke-width=\'1.5\' stroke-linecap=\'round\'/></svg>" )' }}
             >
               {busy ? 'Uploading…' : 'Add Photo'}
             </button>
