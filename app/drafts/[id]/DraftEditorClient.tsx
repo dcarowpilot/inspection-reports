@@ -46,16 +46,20 @@ export default function DraftEditorClient({ id }: { id: string }) {
   }
   useEffect(() => { loadAll(); }, [id]);
 
-  // ---------- Update single field (report) ----------
-  async function updateReportField<K extends keyof Report>(field: K, value: Report[K]) {
+  // ---------- Update report fields ----------
+  // Local-only update (preserves spaces while typing)
+  function setReportFieldLocal<K extends keyof Report>(field: K, value: Report[K]) {
+    setReport((r) => (r ? ({ ...r, [field]: value } as Report) : r));
+  }
+  // Persist to DB; nulls out pure-whitespace values
+  async function saveReportField<K extends keyof Report>(field: K, value: Report[K]) {
     if (!report) return;
-    // allow spaces; only convert all-whitespace to NULL
     let v: any = value;
     if (typeof v === 'string') {
-      v = v.trim();
-      if (v === '') v = null;
+      const trimmed = v.trim();
+      v = trimmed === '' ? null : v; // keep spaces, coerce all-whitespace to NULL
     }
-    setReport(r => r ? ({ ...r, [field]: v } as Report) : r);
+    setReport((r) => (r ? ({ ...r, [field]: v } as Report) : r));
     const { error } = await supabase.from('reports').update({ [field]: v }).eq('id', report.id);
     if (error) alert(error.message);
   }
@@ -72,23 +76,46 @@ export default function DraftEditorClient({ id }: { id: string }) {
   }
 
   async function moveItemUp(itemId: string) {
-    const cur = items.find(i => i.id === itemId);
-    if (!cur || cur.idx <= 1) return;
-    const prev = items.find(i => i.idx === cur.idx - 1);
-    if (!prev) return;
-    await supabase.from('report_items').update({ idx: cur.idx - 1 }).eq('id', cur.id);
-    await supabase.from('report_items').update({ idx: prev.idx + 1 }).eq('id', prev.id);
-    await loadAll();
+    const sorted = [...items].sort((a, b) => a.idx - b.idx);
+    const pos = sorted.findIndex((i) => i.id === itemId);
+    if (pos <= 0) return;
+    const cur = sorted[pos];
+    const prev = sorted[pos - 1];
+    const tmp = -1000000 - Math.abs(cur.idx);
+    // Use a temporary idx to avoid unique collisions
+    try {
+      const r1 = await supabase.from('report_items').update({ idx: tmp }).eq('id', cur.id);
+      if (r1.error) throw r1.error;
+      const r2 = await supabase.from('report_items').update({ idx: cur.idx }).eq('id', prev.id);
+      if (r2.error) throw r2.error;
+      const r3 = await supabase.from('report_items').update({ idx: prev.idx }).eq('id', cur.id);
+      if (r3.error) throw r3.error;
+    } catch (e: any) {
+      alert(e.message ?? 'Reorder failed');
+    } finally {
+      await loadAll();
+    }
   }
 
   async function moveItemDown(itemId: string) {
-    const cur = items.find(i => i.id === itemId);
-    if (!cur) return;
-    const next = items.find(i => i.idx === cur.idx + 1);
-    if (!next) return;
-    await supabase.from('report_items').update({ idx: cur.idx + 1 }).eq('id', cur.id);
-    await supabase.from('report_items').update({ idx: next.idx - 1 }).eq('id', next.id);
-    await loadAll();
+    const sorted = [...items].sort((a, b) => a.idx - b.idx);
+    const pos = sorted.findIndex((i) => i.id === itemId);
+    if (pos === -1 || pos >= sorted.length - 1) return;
+    const cur = sorted[pos];
+    const next = sorted[pos + 1];
+    const tmp = -1000000 - Math.abs(cur.idx);
+    try {
+      const r1 = await supabase.from('report_items').update({ idx: tmp }).eq('id', cur.id);
+      if (r1.error) throw r1.error;
+      const r2 = await supabase.from('report_items').update({ idx: cur.idx }).eq('id', next.id);
+      if (r2.error) throw r2.error;
+      const r3 = await supabase.from('report_items').update({ idx: next.idx }).eq('id', cur.id);
+      if (r3.error) throw r3.error;
+    } catch (e: any) {
+      alert(e.message ?? 'Reorder failed');
+    } finally {
+      await loadAll();
+    }
   }
 
   async function deleteItem(itemId: string) {
@@ -242,8 +269,8 @@ export default function DraftEditorClient({ id }: { id: string }) {
                 className="w-full rounded-md border px-3 py-2"
                 placeholder="Enter a report ID"
                 value={report.report_id ?? ''}
-                onChange={(e) => updateReportField('report_id', e.target.value)}
-                onBlur={(e) => updateReportField('report_id', e.target.value)}
+                onChange={(e) => setReportFieldLocal('report_id', e.target.value)}
+                onBlur={(e) => saveReportField('report_id', e.target.value)}
               />
             </div>
 
@@ -254,8 +281,8 @@ export default function DraftEditorClient({ id }: { id: string }) {
                 className="w-full rounded-md border px-3 py-2"
                 placeholder="Optional title"
                 value={report.title ?? ''}
-                onChange={(e) => updateReportField('title', e.target.value)}
-                onBlur={(e) => updateReportField('title', e.target.value)}
+                onChange={(e) => setReportFieldLocal('title', e.target.value)}
+                onBlur={(e) => saveReportField('title', e.target.value)}
               />
             </div>
 
@@ -266,8 +293,8 @@ export default function DraftEditorClient({ id }: { id: string }) {
                 className="w-full rounded-md border px-3 py-2"
                 placeholder="Optional inspector name"
                 value={report.inspector_name ?? ''}
-                onChange={(e) => updateReportField('inspector_name', e.target.value)}
-                onBlur={(e) => updateReportField('inspector_name', e.target.value)}
+                onChange={(e) => setReportFieldLocal('inspector_name', e.target.value)}
+                onBlur={(e) => saveReportField('inspector_name', e.target.value)}
               />
             </div>
 
@@ -278,7 +305,7 @@ export default function DraftEditorClient({ id }: { id: string }) {
                 type="date"
                 className="w-full rounded-md border px-3 py-2"
                 value={report.inspection_date ?? ''}
-                onChange={(e) => updateReportField('inspection_date', e.target.value)}
+                onChange={(e) => saveReportField('inspection_date', e.target.value)}
               />
             </div>
 
@@ -290,8 +317,8 @@ export default function DraftEditorClient({ id }: { id: string }) {
                 className="w-full rounded-md border px-3 py-2"
                 placeholder="Weather, location, attendees, site conditions…"
                 value={report.details ?? ''}
-                onChange={(e) => updateReportField('details', e.target.value)}
-                onBlur={(e) => updateReportField('details', e.target.value)}
+                onChange={(e) => setReportFieldLocal('details', e.target.value)}
+                onBlur={(e) => saveReportField('details', e.target.value)}
               />
             </div>
           </div>

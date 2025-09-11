@@ -28,6 +28,8 @@ export default function PrintClient({ id }: { id: string }) {
   const [ready, setReady] = useState(false);
 
   const formatResult = (r: Item['result']) => (r === 'na' ? 'N/A' : r.toUpperCase());
+  const resultColorClass = (r: Item['result']) =>
+    r === 'pass' ? 'text-green-700' : r === 'fail' ? 'text-red-700' : 'text-black';
   // --- helpers ---
   function preload(url: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -128,7 +130,11 @@ export default function PrintClient({ id }: { id: string }) {
         {items.map((it) => (
           <div key={it.id} className="item">
             <h2 className="text-lg font-semibold">{it.idx}. {it.title}</h2>
-            <div><strong>Result:</strong> {formatResult(it.result)}</div>
+            <div>
+              <strong>Result:</strong>
+              {" "}
+              <span className={resultColorClass(it.result)}>{formatResult(it.result)}</span>
+            </div>
             {it.notes && <div className="mt-1 whitespace-pre-wrap"><strong>Notes:</strong> {it.notes}</div>}
             {!!(photos[it.id]?.length) && (
               <div className="photos mt-2">
