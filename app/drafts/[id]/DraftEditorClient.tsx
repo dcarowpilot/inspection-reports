@@ -30,7 +30,7 @@ export default function DraftEditorClient({ id }: { id: string }) {
   async function loadAll() {
     const { data: r, error } = await supabase
       .from('reports')
-      .select('id, status, report_id, title, inspector_name, inspection_date, details, created_by') // 👈 includes details
+      .select('id, status, report_id, title, inspector_name, inspection_date, details, created_by')
       .eq('id', id)
       .single();
     if (error) { alert(error.message); return; }
@@ -49,11 +49,12 @@ export default function DraftEditorClient({ id }: { id: string }) {
   // ---------- Update single field (report) ----------
   async function updateReportField<K extends keyof Report>(field: K, value: Report[K]) {
     if (!report) return;
-    // normalize blanks to NULL for string fields
+    // allow spaces; only convert all-whitespace to NULL
     let v: any = value;
     if (typeof v === 'string') {
-  if (v.trim() === '') v = null; // only convert all-whitespace to null
-}
+      v = v.trim();
+      if (v === '') v = null;
+    }
     setReport(r => r ? ({ ...r, [field]: v } as Report) : r);
     const { error } = await supabase.from('reports').update({ [field]: v }).eq('id', report.id);
     if (error) alert(error.message);

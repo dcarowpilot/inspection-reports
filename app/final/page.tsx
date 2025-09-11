@@ -102,14 +102,14 @@ export default function FinalsPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-white overflow-hidden">
-          <table className="w-full text-sm border-separate border-spacing-0">
+        <div className="rounded-xl border bg-white overflow-hidden w-fit max-w-full mx-auto">
+          <table className="w-auto table-auto text-sm border-separate border-spacing-0">
             <thead>
               <tr className="bg-gray-50 text-left">
-                <th className="p-3">Inspection Date</th>
-                                <th className="p-3">Report ID</th>
+                <th className="p-3 whitespace-nowrap">Inspection Date</th>
+                                <th className="p-3 whitespace-nowrap">Report ID</th>
                 <th className="p-3">Report Title</th>
-                <th className="p-3 w-[380px]">Actions</th>
+                <th className="p-3 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -132,9 +132,9 @@ export default function FinalsPage() {
                       onClick={() => openReport(r.id)}
                       onKeyDown={onKey}
                     >
-                      <td className="p-3">{r.inspection_date ?? ''}</td>
+                      <td className="p-3 whitespace-nowrap">{r.inspection_date ?? ''}</td>
                       
-                      <td className="p-3">
+                      <td className="p-3 whitespace-nowrap">
                         <Link
                           href={`/final/${r.id}`}
                           onClick={(e) => e.stopPropagation()}
@@ -144,7 +144,7 @@ export default function FinalsPage() {
                         </Link>
                       </td>
                       <td className="p-3">{r.title ?? ''}</td>
-                      <td className="p-3">
+                      <td className="p-3 whitespace-nowrap">
                         <div className="flex flex-wrap gap-2">
                           <button
                             className="rounded-md border px-2 py-1 hover:bg-gray-50"

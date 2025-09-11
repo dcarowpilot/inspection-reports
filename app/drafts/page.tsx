@@ -136,13 +136,13 @@ export default function DraftsPage() {
           </button>
         </div>
 
-        <div className="rounded-xl border bg-white overflow-hidden">
-          <table className="w-full text-sm border-separate border-spacing-0">
+        <div className="rounded-xl border bg-white overflow-hidden w-fit max-w-full mx-auto">
+          <table className="w-auto table-auto text-sm border-separate border-spacing-0">
             <thead>
               <tr className="bg-gray-50 text-left">
-                <th className="p-3">Inspection Date</th>
+                <th className="p-3 whitespace-nowrap">Inspection Date</th>
                 
-                <th className="p-3">Report ID</th>
+                <th className="p-3 whitespace-nowrap">Report ID</th>
                 <th className="p-3">Report Title</th>
                 <th className="p-3 w-[180px]">Actions</th>
               </tr>
@@ -167,9 +167,9 @@ export default function DraftsPage() {
                       onClick={() => openDraft(r.id)}
                       onKeyDown={onKey}
                     >
-                      <td className="p-3">{r.inspection_date ?? ''}</td>
+                      <td className="p-3 whitespace-nowrap">{r.inspection_date ?? ''}</td>
                       
-                      <td className="p-3">
+                      <td className="p-3 whitespace-nowrap">
                         <Link
                           href={`/drafts/${r.id}`}
                           onClick={(e) => e.stopPropagation()}
