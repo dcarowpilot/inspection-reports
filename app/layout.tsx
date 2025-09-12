@@ -68,6 +68,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
+          <meta
+            name="google-adsense-account"
+            content={process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}
+          />
+        ) : null}
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
           <Script
             id="adsbygoogle-js"
             async
