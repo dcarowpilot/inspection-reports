@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient'; // <- change to '../lib/supabaseClient' if needed
 import { compressImage } from '@/lib/image';     // <- change to '../lib/image' if needed
+import { usePlan } from '@/components/PlanProvider';
 
 // ---------------- Types ----------------
 
@@ -28,6 +29,8 @@ type Photo = { id: string; url: string; storage_path: string };
 // ---------------- Component ----------------
 
 export default function ItemCard({ item, reportId, onMoveUp, onMoveDown, onDelete }: Props) {
+  const { entitlements } = usePlan();
+  const maxPhotosPerItem = entitlements.maxPhotosPerItem;
   // Title
   const [localTitle, setLocalTitle] = useState(item.title ?? '');
   useEffect(() => setLocalTitle(item.title ?? ''), [item.title]);
@@ -102,8 +105,8 @@ export default function ItemCard({ item, reportId, onMoveUp, onMoveDown, onDelet
 
   async function handleAddPhotos(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const remaining = 4 - photos.length;
-    if (remaining <= 0) { alert('Max 4 photos'); return; }
+    const remaining = Math.max(0, maxPhotosPerItem - photos.length);
+    if (remaining <= 0) { alert(`Max ${maxPhotosPerItem} photos`); return; }
 
     setBusy(true);
     try {
@@ -209,7 +212,7 @@ export default function ItemCard({ item, reportId, onMoveUp, onMoveDown, onDelet
       {/* Photos */}
       <div className="mt-3">
         <div className="flex items-center justify-between">
-          <div className="font-medium">Photos ({photos.length}/4)</div>
+          <div className="font-medium">Photos ({photos.length}/{maxPhotosPerItem})</div>
 
           <div className="flex items-center gap-2">
             {/* Hidden file input */}
@@ -226,7 +229,7 @@ export default function ItemCard({ item, reportId, onMoveUp, onMoveDown, onDelet
               type="button" aria-label="Add photo" title="Add photo"
               style={{ width: '36px', height: '32px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'black\' stroke-width=\'1.5\'><rect x=\'4\' y=\'5\' width=\'14\' height=\'11\' rx=\'2\'/><rect x=\'4\' y=\'16\' width=\'14\' height=\'3\' rx=\'1\'/><path d=\'M5.5 14l3-3 2.5 2.5 2-2 3 3\'/><circle cx=\'11\' cy=\'9\' r=\'1.2\'/><circle cx=\'20\' cy=\'7\' r=\'3\' fill=\'black\'/><path d=\'M20 5.75v2.5M18.75 7h2.5\' stroke=\'white\' stroke-width=\'1.5\' stroke-linecap=\'round\'/></svg>" )', color: 'transparent' }}
               onClick={() => fileInputRef.current?.click()}
-              disabled={busy || photos.length >= 4}
+              disabled={busy || photos.length >= maxPhotosPerItem}
               className="inline-flex items-center justify-center gap-1 rounded-md border px-2.5 py-1.5 hover:bg-gray-50 disabled:opacity-60 text-transparent"
             >
               {busy ? 'Uploading…' : 'Add Photo'}

@@ -28,6 +28,12 @@ export default function PlanProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     let mounted = true;
     (async () => {
+      const override = process.env.NEXT_PUBLIC_PLAN_OVERRIDE as PlanKey | undefined;
+      if (override && ['free','premium','super'].includes(override)) {
+        console.warn('[PlanProvider] Using NEXT_PUBLIC_PLAN_OVERRIDE =', override);
+        if (mounted) { setPlanKey(override); setLoading(false); }
+        return;
+      }
       try {
         // Try to read the user's plan from a `profiles` table.
         const { data: auth } = await supabase.auth.getUser();
@@ -68,4 +74,3 @@ export default function PlanProvider({ children }: { children: React.ReactNode }
 
   return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 }
-

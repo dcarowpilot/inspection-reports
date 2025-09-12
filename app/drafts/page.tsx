@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { usePlan } from '@/components/PlanProvider';
+import UpgradeModal from '@/components/UpgradeModal';
 
 type DraftRow = {
   id: string;
@@ -20,6 +22,8 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const { entitlements } = usePlan();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -46,6 +50,16 @@ export default function DraftsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Please sign in first.');
+
+      // Soft-limit: total reports across all statuses
+      const { count } = await supabase
+        .from('reports')
+        .select('id', { count: 'exact', head: true })
+        .or(`created_by.eq.${user.id},created_by.is.null`);
+      if ((count ?? 0) >= entitlements.maxReports) {
+        setShowUpgrade(true);
+        return;
+      }
 
       // Create report
       const { data: inserted, error } = await supabase
@@ -198,6 +212,7 @@ export default function DraftsPage() {
           </table>
         </div>
       </div>
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </main>
   );
 }

@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabaseClient';
 import ItemCard, { type Item } from '@/components/ItemCard';
 import { Document, Packer, Paragraph, TextRun, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
+import { usePlan } from '@/components/PlanProvider';
+import UpgradeModal from '@/components/UpgradeModal';
 
 type Report = {
   id: string;
@@ -25,6 +27,8 @@ export default function DraftEditorClient({ id }: { id: string }) {
   const [report, setReport] = useState<Report | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
+  const { entitlements } = usePlan();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // ---------- Load report + items ----------
   async function loadAll() {
@@ -66,6 +70,7 @@ export default function DraftEditorClient({ id }: { id: string }) {
 
   // ---------- Items helpers ----------
   async function addItem() {
+    if (items.length >= entitlements.maxItems) { setShowUpgrade(true); return; }
     const next = (items[items.length - 1]?.idx ?? 0) + 1;
     const { error } = await supabase
       .from('report_items')
@@ -169,6 +174,7 @@ export default function DraftEditorClient({ id }: { id: string }) {
   // ---------- DOCX (with photos) ----------
   async function downloadDocx() {
     if (!report) return;
+    if (!entitlements.canDownloadDocx) { setShowUpgrade(true); return; }
 
     const fmt = (r: 'pass' | 'fail' | 'na') => (r === 'na' ? 'N/A' : r.toUpperCase());
 
@@ -360,14 +366,15 @@ export default function DraftEditorClient({ id }: { id: string }) {
           <button onClick={saveAndClose} className="rounded-md border px-3 py-1.5">
             Save &amp; Close
           </button>
-          <button onClick={downloadDocx} className="rounded-md border px-3 py-1.5">
-            Download Draft (.docx)
+          <button onClick={downloadDocx} className="rounded-md border px-3 py-1.5 disabled:opacity-60" disabled={!entitlements.canDownloadDocx}>
+            {entitlements.canDownloadDocx ? 'Download Draft (.docx)' : 'Download (.docx) — Premium'}
           </button>
           <button onClick={convertToFinal} className="rounded-md bg-black text-white px-3 py-1.5">
             Convert to Final
           </button>
         </div>
       </div>
+        <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </main>
   );
 }
