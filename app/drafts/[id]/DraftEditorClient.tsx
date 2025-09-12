@@ -255,7 +255,7 @@ export default function DraftEditorClient({ id }: { id: string }) {
         <div className="flex items-center justify-between">
           <Link href="/home" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Home</Link>
           <h1 className="text-2xl font-semibold">Draft</h1>
-          <div />
+          <Link href="/account" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Account</Link>
         </div>
 
         {/* -------- Header card -------- */}

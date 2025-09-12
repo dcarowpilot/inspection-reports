@@ -34,11 +34,17 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 flex items-center gap-3">
         <h1 className="text-3xl font-semibold text-slate-900">Home</h1>
+        <Link
+          href="/account"
+          className="ml-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Account
+        </Link>
         <button
           onClick={signOut}
-          className="ml-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Sign out
         </button>

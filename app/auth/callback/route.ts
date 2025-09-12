@@ -11,6 +11,8 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
     await supabase.auth.exchangeCodeForSession(code);
+    // Create a profile row for new users (no-op if it exists)
+    try { await supabase.rpc('ensure_profile'); } catch (e) { /* ignore */ }
   }
 
   return NextResponse.redirect(new URL(next, origin));

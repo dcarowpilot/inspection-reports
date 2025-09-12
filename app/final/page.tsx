@@ -99,6 +99,7 @@ export default function FinalsPage() {
           <div className="flex items-center gap-3">
             <Link href="/home" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Home</Link>
             <h1 className="text-2xl font-semibold ml-1">Final Reports</h1>
+            <Link href="/account" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Account</Link>
           </div>
         </div>
 

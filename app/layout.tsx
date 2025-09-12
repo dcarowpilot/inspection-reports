@@ -1,6 +1,9 @@
 // app/layout.tsx
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
+import PlanProvider from '@/components/PlanProvider';
+import AdSenseRails from '@/components/AdSenseRails';
 
 
 
@@ -63,8 +66,23 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
+          <Script
+            id="adsbygoogle-js"
+            async
+            strategy="afterInteractive"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+          />
+        ) : null}
+      </head>
       <body>
-                {children}
+        <PlanProvider>
+          {/* Ads render only for Free plan and when env IDs are present */}
+          <AdSenseRails />
+          {children}
+        </PlanProvider>
       </body>
     </html>
   );

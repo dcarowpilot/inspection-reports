@@ -27,6 +27,8 @@ export default function Page() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Ensure a profile row exists for this user
+        try { await supabase.rpc('ensure_profile'); } catch { /* ignore */ }
         router.replace('/home');
       } else if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
@@ -116,4 +118,3 @@ async function signInWithGoogle() {
     </main>
   );
 }
-

@@ -125,7 +125,7 @@ export default function FinalClient({ id }: { id: string }) {
         <div className="flex items-center justify-between">
           <Link href="/final" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Back to Final Reports</Link>
           <h1 className="text-2xl font-semibold">Final</h1>
-          <div />
+          <Link href="/account" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Account</Link>
         </div>
 
         {/* Report Header */}
