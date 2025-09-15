@@ -88,6 +88,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Ads render only for Free plan and when env IDs are present */}
           <AdSenseRails />
           {children}
+          <footer className="mt-10 border-t bg-white/80">
+            <div className="mx-auto max-w-6xl px-6 py-6 text-sm text-gray-600 flex flex-wrap items-center gap-3">
+              <a href="/legal" className="underline">Legal & Policies</a>
+              <a href="/account" className="underline">Account</a>
+              <span className="ml-auto">© {new Date().getFullYear()} Inspection Report Maker</span>
+            </div>
+          </footer>
         </PlanProvider>
       </body>
     </html>
