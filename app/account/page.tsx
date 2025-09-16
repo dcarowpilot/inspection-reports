@@ -24,6 +24,24 @@ export default function AccountPage() {
     }
   }
 
+  async function startCheckout(plan: 'premium' | 'super') {
+    const res = await fetch('/api/billing/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (!res.ok) return alert(data.error || 'Checkout failed');
+    window.location.href = data.url;
+  }
+
+  async function openPortal() {
+    const res = await fetch('/api/billing/portal', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) return alert(data.error || 'Portal failed');
+    window.location.href = data.url;
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-3xl space-y-6">
@@ -45,8 +63,10 @@ export default function AccountPage() {
             </div>
           )}
 
-          <div className="mt-4 text-sm text-gray-600">
-            Upgrades coming soon. You’ll be able to manage billing here.
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button onClick={() => startCheckout('premium')} className="rounded-md bg-black text-white px-3 py-1.5">Upgrade to Premium</button>
+            <button onClick={() => startCheckout('super')} className="rounded-md border px-3 py-1.5">Upgrade to Super</button>
+            <button onClick={openPortal} className="ml-auto rounded-md border px-3 py-1.5">Manage Billing</button>
           </div>
 
           {enableFakeUpgrade && (
