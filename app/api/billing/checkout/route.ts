@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     if (!priceId) return NextResponse.json({ error: 'Price not configured' }, { status: 500 });
 
     const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: async () => cookieStore });
+    const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) });
     const {
       data: { user },
     } = await supabase.auth.getUser();
