@@ -7,7 +7,7 @@ import { getAdminClient } from '@/lib/supabaseAdmin';
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) });
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore } as any);
     const {
       data: { user },
     } = await supabase.auth.getUser();

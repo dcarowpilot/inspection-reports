@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) });
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore } as any);
     await supabase.auth.exchangeCodeForSession(code);
     // Create a profile row for new users (no-op if it exists)
     try { await supabase.rpc('ensure_profile'); } catch (e) { /* ignore */ }

@@ -15,10 +15,10 @@
     "browser-image-compression": "^2.0.2",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
-    "stripe": "^14.0.0",
     "next": "15.5.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "stripe": "^14.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
