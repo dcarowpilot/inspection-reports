@@ -15,16 +15,23 @@ export async function POST(request: Request) {
     const priceId = plan === 'premium' ? process.env.STRIPE_PRICE_PREMIUM : process.env.STRIPE_PRICE_SUPER;
     if (!priceId) return NextResponse.json({ error: 'Price not configured' }, { status: 500 });
 
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
     const admin = getAdminClient();
-    // Ensure profile row
-    await admin.rpc('ensure_profile').catch(() => undefined);
-    const { data: profile } = await admin.from('profiles').select('stripe_customer_id').eq('id', user.id).single();
+    const { data: profile, error: profileError } = await admin
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profileError && profileError.code !== 'PGRST116') throw profileError;
+    if (!profile) {
+      await admin.from('profiles').insert({ id: user.id, plan: 'free' });
+    }
 
     const stripe = getStripe();
     let customerId = profile?.stripe_customer_id as string | undefined;
@@ -40,11 +47,17 @@ export async function POST(request: Request) {
     const baseUrl = getBaseUrl(request);
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
+      client_reference_id: user.id,
+      metadata: { supabaseUserId: user.id, price_id: priceId, plan },
+      subscription_data: {
+        metadata: { supabaseUserId: user.id, price_id: priceId, plan },
+      },
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/account?upgrade=success`,
       cancel_url: `${baseUrl}/account?upgrade=cancelled`,
       allow_promotion_codes: true,
+      expand: ['line_items'],
     });
 
     return NextResponse.json({ url: session.url });
