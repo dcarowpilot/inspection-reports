@@ -1,42 +1,64 @@
-"use client";
+'use client'
 
-import Link from 'next/link';
-import { PLANS } from '@/lib/plan';
+import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PLANS } from '@/lib/plan'
 
 export default function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  if (!open) return null;
+  if (!open) return null
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative z-10 w-[min(92vw,760px)] rounded-xl border bg-white p-5 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm">
+      <div className="w-[min(92vw,760px)] space-y-4 rounded-2xl border bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-xl font-semibold">Upgrade to unlock more</h2>
-          <button onClick={onClose} className="rounded-md border px-2 py-1">Close</button>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Upgrade to unlock more</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Premium tiers increase report, item, and photo limits and remove ads.
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
         </div>
-        <p className="mt-2 text-sm text-gray-600">Free includes basic limits. Premium and Super Premium increase report, item, and photo limits and remove ads.</p>
-
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-          {(['free','premium','super'] as const).map((k) => (
-            <div key={k} className="rounded-lg border p-3">
-              <div className="font-semibold">{PLANS[k].name}</div>
-              <div className="text-gray-700 mt-1">${PLANS[k].price.toFixed(2)}</div>
-              <ul className="mt-2 space-y-1">
-                <li>Reports: {PLANS[k].maxReports}</li>
-                <li>Items/report: {PLANS[k].maxItems}</li>
-                <li>Photos/item: {PLANS[k].maxPhotosPerItem}</li>
-                <li>Download .docx: {PLANS[k].canDownloadDocx ? 'Yes' : 'No'}</li>
-                <li>Templates: {PLANS[k].canCreateTemplates ? 'Yes' : 'No'}</li>
-                <li>Ads: {PLANS[k].showAds ? 'Shown' : 'Hidden'}</li>
-              </ul>
-            </div>
-          ))}
+        <div className="grid gap-3 md:grid-cols-3">
+          {(Object.keys(PLANS) as Array<'free' | 'premium' | 'super'>).map((tier) => {
+            const plan = PLANS[tier]
+            return (
+              <Card key={tier} className="h-full rounded-2xl border shadow-sm">
+                <CardHeader className="space-y-1">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    {plan.name}
+                    {tier !== 'free' ? (
+                      <Badge variant="outline" className="uppercase tracking-wide">
+                        {tier}
+                      </Badge>
+                    ) : null}
+                  </CardTitle>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {'$' + plan.price.toFixed(2)}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  <p>Reports: {plan.maxReports}</p>
+                  <p>Items/report: {plan.maxItems}</p>
+                  <p>Photos/item: {plan.maxPhotosPerItem}</p>
+                  <p>Download .docx: {plan.canDownloadDocx ? 'Included' : 'Not included'}</p>
+                  <p>Templates: {plan.canCreateTemplates ? 'Included' : 'Not included'}</p>
+                  <p>Ads: {plan.showAds ? 'Shown' : 'Hidden'}</p>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
-
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <Link href="/account" onClick={onClose} className="rounded-md bg-black text-white px-3 py-1.5">Go to Account</Link>
+        <div className="flex items-center justify-end">
+          <Button asChild onClick={onClose}>
+            <Link href="/account">Go to account</Link>
+          </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }
-

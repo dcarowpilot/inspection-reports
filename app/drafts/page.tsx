@@ -1,67 +1,89 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { usePlan } from '@/components/PlanProvider';
-import UpgradeModal from '@/components/UpgradeModal';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react'
+import AppHeader from '@/components/AppHeader'
+import { PlanBanner } from '@/components/PlanBanner'
+import UpgradeModal from '@/components/UpgradeModal'
+import { usePlan } from '@/components/PlanProvider'
+import { supabase } from '@/lib/supabaseClient'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { ReportsTable } from '@/components/ReportsTable'
 
-type DraftRow = {
-  id: string;
-  inspection_date: string | null;
-  inspector_name: string | null;
-  report_id: string | null;
-  title: string | null;
-  status: 'draft' | 'final';
-};
+export type DraftRow = {
+  id: string
+  inspection_date: string | null
+  inspector_name: string | null
+  report_id: string | null
+  title: string | null
+  status: 'draft' | 'final'
+}
 
 export default function DraftsPage() {
-  const router = useRouter();
-  const [rows, setRows] = useState<DraftRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const { entitlements } = usePlan();
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const router = useRouter()
+  const { entitlements } = usePlan()
+  const [rows, setRows] = useState<DraftRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
-  async function load() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('reports')
-      .select('id, inspection_date, report_id, title, status')
-      .eq('status', 'draft')
-      .order('inspection_date', { ascending: false });
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('reports')
+        .select('id, inspection_date, report_id, title, status')
+        .eq('status', 'draft')
+        .order('inspection_date', { ascending: false })
 
-    if (error) alert(error.message);
-    else setRows((data ?? []) as DraftRow[]);
-    setLoading(false);
+      if (error) {
+        toast.error(error.message)
+      } else {
+        setRows((data ?? []) as DraftRow[])
+      }
+      setLoading(false)
+    }
+
+    load()
+  }, [])
+
+  const openDraft = (id: string) => {
+    router.push(`/drafts/${id}`)
   }
-  useEffect(() => { load(); }, []);
 
-  // Row open
-  function openDraft(id: string) {
-    router.push(`/drafts/${id}`);
-  }
-
-  // Create a brand-new draft and open it
-  async function newDraft() {
-    setCreating(true);
+  const newDraft = async () => {
+    setCreating(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Please sign in first.');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('Please sign in first.')
 
-      // Soft-limit: total reports across all statuses
       const { count } = await supabase
         .from('reports')
         .select('id', { count: 'exact', head: true })
-        .or(`created_by.eq.${user.id},created_by.is.null`);
+        .or(`created_by.eq.${user.id},created_by.is.null`)
       if ((count ?? 0) >= entitlements.maxReports) {
-        setShowUpgrade(true);
-        return;
+        setShowUpgrade(true)
+        return
       }
 
-      // Create report
       const { data: inserted, error } = await supabase
         .from('reports')
         .insert({
@@ -71,148 +93,130 @@ export default function DraftsPage() {
           title: null,
           inspector_name: null,
           inspection_date: new Date().toISOString().slice(0, 10),
-          details: null, // stored but not displayed on the list
+          details: null,
         })
         .select('id')
-        .single();
+        .single()
+      if (error) throw error
 
-      if (error) throw error;
-
-      // Start with one blank item
       await supabase.from('report_items').insert({
         report_id: inserted.id,
         idx: 1,
         title: '',
         result: 'na',
         notes: '',
-      });
+      })
 
-      router.push(`/drafts/${inserted.id}`);
-    } catch (e: any) {
-      alert(e.message ?? 'Failed to create draft');
+      toast.success('Draft created')
+      router.push(`/drafts/${inserted.id}`)
+    } catch (error) {
+      toast.error((error as Error).message ?? 'Failed to create draft')
     } finally {
-      setCreating(false);
+      setCreating(false)
     }
   }
 
-  // Delete a draft (and its items/photos)
-  async function deleteDraft(e: any, reportId: string) {
-    e.stopPropagation();
-    if (!confirm('Delete this draft? There is no recovery of deleted items.')) return;
-
-    setDeleting(reportId);
+  const deleteDraft = async (reportId: string) => {
+    setDeletingId(reportId)
     try {
       const { data: items } = await supabase
         .from('report_items')
         .select('id')
-        .eq('report_id', reportId);
-      const itemIds = (items ?? []).map((i: any) => i.id);
+        .eq('report_id', reportId)
+      const itemIds = (items ?? []).map((item: any) => item.id)
 
       if (itemIds.length) {
         const { data: photos } = await supabase
           .from('report_item_photos')
           .select('storage_path')
-          .in('report_item_id', itemIds);
-
-        const paths = (photos ?? []).map((p: any) => p.storage_path).filter(Boolean);
-        if (paths.length) await supabase.storage.from('photos').remove(paths);
+          .in('report_item_id', itemIds)
+        const paths = (photos ?? []).map((p: any) => p.storage_path).filter(Boolean)
+        if (paths.length) await supabase.storage.from('photos').remove(paths)
         if ((photos ?? []).length) {
-          await supabase.from('report_item_photos').delete().in('report_item_id', itemIds);
+          await supabase.from('report_item_photos').delete().in('report_item_id', itemIds)
         }
       }
 
-      await supabase.from('report_items').delete().eq('report_id', reportId);
-      const { error } = await supabase.from('reports').delete().eq('id', reportId);
-      if (error) throw error;
+      await supabase.from('report_items').delete().eq('report_id', reportId)
+      const { error } = await supabase.from('reports').delete().eq('id', reportId)
+      if (error) throw error
 
-      setRows(prev => prev.filter(r => r.id !== reportId));
-    } catch (err: any) {
-      alert(err.message ?? 'Delete failed');
+      setRows((prev) => prev.filter((row) => row.id !== reportId))
+      toast.success('Draft deleted')
+    } catch (error) {
+      toast.error((error as Error).message ?? 'Delete failed')
     } finally {
-      setDeleting(null);
+      setDeletingId(null)
     }
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/home" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Home</Link>
-            <h1 className="text-2xl font-semibold ml-1">Draft Reports</h1>
-            <Link href="/account" className="rounded-md border px-3 py-1.5 hover:bg-gray-50">Account</Link>
-          </div>
-          <button
-            onClick={newDraft}
-            disabled={creating}
-            className="rounded-md bg-black text-white px-3 py-1.5 disabled:opacity-60"
-          >
-            {creating ? 'Creating…' : 'New Draft'}
-          </button>
-        </div>
+    <div className="space-y-6">
+      <AppHeader />
+      <PlanBanner />
 
-        <div className="rounded-xl border bg-white overflow-hidden w-fit max-w-full mx-auto">
-          <table className="w-auto table-auto text-sm border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="p-3 whitespace-nowrap">Inspection Date</th>
-                
-                <th className="p-3 whitespace-nowrap">Report ID</th>
-                <th className="p-3">Report Title</th>
-                <th className="p-3 w-[180px]">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={5} className="p-4">Loading…</td></tr>
-              ) : rows.length === 0 ? (
-                <tr><td colSpan={5} className="p-4 text-gray-600">No drafts yet.</td></tr>
-              ) : (
-                rows.map((r) => {
-                  const onKey = (e: any) => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDraft(r.id); }
-                  };
-                  return (
-                    <tr
-                      key={r.id}
-                      className="border-t hover:bg-gray-50 cursor-pointer"
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`Open draft ${r.report_id || r.title || r.inspection_date || r.id}`}
-                      onClick={() => openDraft(r.id)}
-                      onKeyDown={onKey}
+      <Card className="rounded-2xl border shadow-sm">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">Draft reports</CardTitle>
+            <CardDescription>Continue editing or create a new inspection report.</CardDescription>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm">
+              {rows.length} active
+            </Badge>
+            <Button onClick={newDraft} disabled={creating}>
+              {creating ? 'Creating...' : 'New draft'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ReportsTable
+            rows={rows}
+            loading={loading}
+            emptyMessage="You don't have any drafts yet. Start a new report to begin documenting."
+            onRowClick={(row) => openDraft(row.id)}
+            getRowHref={(row) => `/drafts/${row.id}`}
+            renderActions={(row) => (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete draft?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently removes the draft, its items, and any photos.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        await deleteDraft(row.id)
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      disabled={deletingId === row.id}
                     >
-                      <td className="p-3 whitespace-nowrap">{r.inspection_date ?? ''}</td>
-                      
-                      <td className="p-3 whitespace-nowrap">
-                        <Link
-                          href={`/drafts/${r.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="underline"
-                        >
-                          {r.report_id ?? ''}
-                        </Link>
-                      </td>
-                      <td className="p-3">{r.title ?? ''}</td>
-                      <td className="p-3">
-                        <button
-                          className="rounded-md border px-2 py-1 hover:bg-gray-50"
-                          onClick={(e) => deleteDraft(e, r.id)}
-                          disabled={deleting === r.id}
-                          title="Delete draft"
-                        >
-                          {deleting === r.id ? 'Deleting…' : 'Delete'}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      {deletingId === row.id ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          />
+        </CardContent>
+      </Card>
+
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
-    </main>
-  );
+    </div>
+  )
 }
+
