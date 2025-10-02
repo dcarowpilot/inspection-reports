@@ -50,23 +50,31 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      <AppHeader />
+      <AppHeader
+        rightContent={
+          <>
+            <Button variant="outline" asChild className="h-9 px-3">
+              <Link href="/account">Account</Link>
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={signOut}
+              disabled={signingOut}
+              className="h-9 px-3"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {signingOut ? 'Signing out...' : 'Sign out'}
+            </Button>
+          </>
+        }
+      />
       <PlanBanner />
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div>
           <h1 className="text-3xl font-semibold text-gray-900">Welcome back</h1>
           <p className="text-sm text-muted-foreground">
             Jump into a draft or review your final reports.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/account">Account</Link>
-          </Button>
-          <Button variant="secondary" onClick={signOut} disabled={signingOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            {signingOut ? 'Signing out...' : 'Sign out'}
-          </Button>
         </div>
       </div>
 
@@ -133,4 +141,3 @@ export default function Home() {
     </div>
   )
 }
-
