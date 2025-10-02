@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
+import { HeaderActions } from '@/components/HeaderActions'
 import { PlanBanner } from '@/components/PlanBanner'
 import UpgradeModal from '@/components/UpgradeModal'
 import { usePlan } from '@/components/PlanProvider'
@@ -152,7 +153,7 @@ export default function DraftsPage() {
 
   return (
     <div className="space-y-6">
-      <AppHeader />
+      <AppHeader rightContent={<HeaderActions />} />
       <PlanBanner />
 
       <Card className="rounded-2xl border shadow-sm">

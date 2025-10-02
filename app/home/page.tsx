@@ -2,10 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { FileText, LogOut, NotebookPen } from 'lucide-react'
+import { FileText, NotebookPen } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
+import { HeaderActions } from '@/components/HeaderActions'
 import { PlanBanner } from '@/components/PlanBanner'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
@@ -13,10 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 export default function Home() {
-  const router = useRouter()
   const [draftCount, setDraftCount] = useState<number | null>(null)
   const [finalCount, setFinalCount] = useState<number | null>(null)
-  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -35,39 +32,9 @@ export default function Home() {
     loadCounts()
   }, [])
 
-  const signOut = async () => {
-    setSigningOut(true)
-    try {
-      await supabase.auth.signOut()
-      toast.success('Signed out')
-      router.replace('/')
-    } catch (error) {
-      toast.error('Unable to sign out. Please try again.')
-    } finally {
-      setSigningOut(false)
-    }
-  }
-
   return (
     <div className="space-y-6">
-      <AppHeader
-        rightContent={
-          <>
-            <Button variant="outline" asChild className="h-9 px-3">
-              <Link href="/account">Account</Link>
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={signOut}
-              disabled={signingOut}
-              className="h-9 px-3"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              {signingOut ? 'Signing out...' : 'Sign out'}
-            </Button>
-          </>
-        }
-      />
+      <AppHeader rightContent={<HeaderActions />} />
       <PlanBanner />
       <div className="flex flex-wrap items-center gap-3">
         <div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowLeftRight, FileDown, Trash2 } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
+import { HeaderActions } from '@/components/HeaderActions'
 import { PlanBanner } from '@/components/PlanBanner'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
@@ -115,7 +116,7 @@ export default function FinalsPage() {
 
   return (
     <div className="space-y-6">
-      <AppHeader />
+      <AppHeader rightContent={<HeaderActions />} />
       <PlanBanner />
 
       <Card className="rounded-2xl border shadow-sm">

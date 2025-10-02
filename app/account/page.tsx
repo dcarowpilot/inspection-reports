@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import AppHeader from '@/components/AppHeader'
+import { HeaderActions } from '@/components/HeaderActions'
 import { PlanBanner } from '@/components/PlanBanner'
 import { usePlan } from '@/components/PlanProvider'
 import { supabase } from '@/lib/supabaseClient'
@@ -89,7 +90,7 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-6">
-      <AppHeader />
+      <AppHeader rightContent={<HeaderActions />} />
       <PlanBanner />
 
       <Card className="rounded-2xl border shadow-sm">
